@@ -1,0 +1,57 @@
+import pandas as pd
+import json
+from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
+from datetime import datetime
+
+def fetch_ua_data(credentials_path, view_id, start_date, end_date, metrics. dimensions):
+
+  creds = Credentials.from_service_account_file(credentials_path, scopes=["https://www.googleapis.com/auth/analytics.readonly"])
+
+  #build the service
+
+  analytics = build('analyticsreporting', 'v4', credentials=creds)
+
+  #fetch the report
+
+  response = analytics.reports().batchget(
+      body={
+          'reportRequests': [{
+              'viewId': view_id,
+              'dateRanges': [{'startDate': start_date, 'endDate':end_date}],
+              'metrics': metrics,
+              'dimensions': dimensions
+          }]
+      }
+  ).execute()
+
+  return response
+
+
+def main():
+  try:
+    #settings
+    credentials_path = r"file_path"
+    view_id = '123456789'
+    start_date = '2022-09-05'
+    end_date = '2022-09-11'
+    metrics = [
+        {'expression': 'ga:sessions'},
+        {'expression': 'ga:newusers'},
+        {'expression': 'ga:transactionRevenue'},
+        {'expression': 'ga:transactions'},
+        {'expression': 'ga:revenuePerTransaction'},
+        {'expression': 'ga:transactionPerSession'}
+    ]
+    dimensions = [{'name': 'ga:date'}]
+
+    #operations
+
+    response = fetch_ua_data(credentials_path, view_id, start_date, end_date, metrics, dimensions)
+    df = process_ua_response(respnse)
+    df.to_excel('weekly_report_ua(aug 05 2022).xlsx', index=False)
+  except Exception as e:
+    print("Error:", str(e))
+
+if __name__ == '__main__':
+  main()
